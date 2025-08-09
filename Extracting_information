@@ -1,0 +1,112 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+import pandas as pd
+
+# Read Excel file (specify sheet name if needed)
+df = pd.read_excel('C:/Users/lenovo/Downloads/HandyM.xlsx')  # Or pd.read_excel('your_file.xlsx', sheet_name='Sheet1')
+
+# Convert to list of rows (each row is a list)
+GC = df.values.tolist()
+
+Villes = ["Illinois", "Texas", "New York", "London", "California", "Florida", "Ohio", "Michigan"]
+Res=[]
+MP=0
+for f in GC:
+    print(MP)
+    MP+=1
+    response = requests.get(f[0])
+
+    M=[0]*13
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    B=soup.find(id='business',class_='AnchorSection__StyledSection-sc-1be6hcb-0 halLNz sc-183mtny-0 jJzknL')
+    try:
+        tag3 = B.find(string="Address").parent
+        Address = tag3.find_next_sibling()
+        M[6]=Address.text
+        a=False
+        for q in Villes:
+            if q in M[6]:
+                a=True
+                print(Address.text)
+      
+    except:
+      continue
+    if a==False :continue
+    A=soup.find(class_='sc-183mtny-0 fa-DRMH')
+    try:
+        NamBuss=A.find(class_='sc-mwxddt-0 kmHBgE hz-track-me')
+        M[0]=NamBuss.text
+    except:
+      pass
+    try:
+        Job_Name=A.find(class_="sc-mwxddt-0 pXpTY")
+        M[1]=Job_Name.text
+    except:
+      pass
+    try:
+        Stars=A.find(class_='sr-only')
+        M[2]=Stars.text
+    except:
+      pass
+
+    try:
+        reviews=A.find(class_='hz-star-rate__review-string')
+        M[3]=reviews.text
+    except:
+      pass
+
+    
+
+
+    try:
+        tag1 = B.find(string="Phone Number").parent
+        Phone_num = tag1.find_next_sibling()
+        M[4]=Phone_num.text
+    except:
+      pass
+
+
+    try:
+        tag2 = B.find(string="Website").parent
+        email = tag2.find_next_sibling()
+        M[5]=email.text
+    except:
+      pass
+
+    try:
+        tag4 = B.find(string="Followers").parent
+        Foll = tag4.find_next_sibling()
+        Followers=Foll.find('p')
+        M[7]=Followers.text
+    except:
+      pass
+
+    try:
+        tag5 = B.find(string="Typical Job Cost").parent
+        Cost = tag5.find_next_sibling()
+        M[8]=Cost.text
+    except:
+      pass
+
+    try:
+        tag6 = B.find(string="Socials").parent
+        sm = tag6.find_next_sibling()
+        SoMe=sm.find_all('a')
+        k=0
+        for i in SoMe:
+          M[9+k]=i["href"]
+          k+=1
+
+    except:
+      pass
+    time.sleep(0.1)
+    Res.append(M)
+
+
+# Create DataFrame
+df = pd.DataFrame(Res)
+
+# Save to Excel file
+df.to_excel('output.xlsx', index=False)    
